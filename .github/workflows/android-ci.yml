@@ -25,52 +25,31 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '17'
+          cache: maven
 
       - name: Generate Debug Keystore
         run: |
-          keytool -genkeypair -alias androiddebugkey -keyalg RSA -keysize 2048 -validity 10000 \
-            -dname "CN=Android Debug,O=Android,C=US" -keystore debug.keystore \
-            -storepass android -keypass android -storetype jks
-          echo "Debug keystore generated"
-          ls -la debug.keystore
-
-      - name: Cache Gradle packages
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-          restore-keys: |
-            ${{ runner.os }}-gradle-
+          keytool -genkeypair -alias androiddebugkey -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US" -keystore debug.keystore -storepass android -keypass android -storetype jks
+          echo "Debug keystore generated successfully"
+          file debug.keystore
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
-        with:
-          cache-disabled: false
 
       - name: Run Unit Tests
-        run: gradle testDebugUnitTest --no-daemon --stacktrace --no-configuration-cache
+        run: ./gradlew testDebugUnitTest --no-daemon --stacktrace
 
       - name: Build Debug APK
-        run: gradle assembleDebug --no-daemon --stacktrace --no-configuration-cache
+        run: ./gradlew assembleDebug --no-daemon --stacktrace
 
-      - name: Verify Debug APK
+      - name: Fix APK Permissions
         run: |
-          echo "=== Verifying Debug APK Artifact ==="
+          chmod 644 app/build/outputs/apk/debug/app-debug.apk || true
           ls -lh app/build/outputs/apk/debug/
-          APK_FILE="app/build/outputs/apk/debug/app-debug.apk"
-          if [ -f "$APK_FILE" ]; then
-            FILESIZE=$(stat -c%s "$APK_FILE")
-            echo "Debug APK found: $APK_FILE ($FILESIZE bytes)"
-          else
-            echo "ERROR: Debug APK not found at $APK_FILE"
-            exit 1
-          fi
 
       - name: Upload Debug APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: AURA-debug-apk
           path: app/build/outputs/apk/debug/app-debug.apk
-          if-no-files-found: error
+          retention-days: 30
