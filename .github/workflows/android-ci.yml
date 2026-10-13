@@ -26,14 +26,26 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
+      - name: Cache Gradle packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-disabled: false
 
       - name: Run Unit Tests
-        run: gradle testDebugUnitTest --no-daemon --stacktrace
+        run: gradle testDebugUnitTest --no-daemon --stacktrace --no-configuration-cache
 
       - name: Build Debug APK
-        run: gradle assembleDebug --no-daemon --stacktrace
+        run: gradle assembleDebug --no-daemon --stacktrace --no-configuration-cache
 
       - name: Verify Debug APK
         run: |
