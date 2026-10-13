@@ -27,6 +27,24 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
+      - name: Generate Debug Keystore
+        run: |
+          if [ ! -f "debug.keystore" ]; then
+            echo "Generating debug keystore..."
+            keytool -genkeypair \
+              -alias androiddebugkey \
+              -keyalg RSA \
+              -keysize 2048 \
+              -validity 10000 \
+              -dname "CN=Android Debug,O=Android,C=US" \
+              -keystore debug.keystore \
+              -storepass android \
+              -keypass android
+            echo "Debug keystore generated successfully"
+          else
+            echo "Debug keystore already exists"
+          fi
+
       - name: Cache Gradle packages
         uses: actions/cache@v4
         with:
