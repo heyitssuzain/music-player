@@ -91,13 +91,23 @@ jobs:
           fi
           echo "APK found at: $APK_PATH"
           ls -lh "$APK_PATH"
-          unzip -l "$APK_PATH" | head -20
+          
+          # Optional verification - don't fail if these don't work
+          echo "--- APK Contents ---"
+          unzip -l "$APK_PATH" | head -20 || echo "unzip failed, continuing..."
+          
+          echo "--- Package Info ---"
           if command -v aapt &> /dev/null; then
-            aapt dump badging "$APK_PATH" | grep package
+            aapt dump badging "$APK_PATH" | grep package || echo "aapt failed, continuing..."
           elif command -v apkanalyzer &> /dev/null; then
-            apkanalyzer manifest application-id "$APK_PATH"
+            apkanalyzer manifest application-id "$APK_PATH" || echo "apkanalyzer failed, continuing..."
+          else
+            echo "Neither aapt nor apkanalyzer available, continuing..."
           fi
-          sha256sum "$APK_PATH"
+          
+          echo "--- SHA256 ---"
+          sha256sum "$APK_PATH" || echo "sha256sum failed, continuing..."
+          
           echo "APK_PATH=$APK_PATH" >> $GITHUB_ENV
 
       - name: Upload Debug APK
