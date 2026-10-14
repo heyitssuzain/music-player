@@ -35,8 +35,8 @@ jobs:
           rm cmdline-tools.zip
           export ANDROID_HOME=/usr/local/lib/android/sdk
           export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$PATH
-          echo "y" | sdkmanager --licenses
-          sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0" --sdk_root=$ANDROID_HOME
+          yes | sdkmanager --licenses
+          sdkmanager "platform-tools" "platforms;android-36" "build-tools;36.0.0" --sdk_root=$ANDROID_HOME
           echo "ANDROID_HOME=$ANDROID_HOME" >> $GITHUB_ENV
           echo "ANDROID_HOME/cmdline-tools/latest/bin" >> $GITHUB_PATH
 

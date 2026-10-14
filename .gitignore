@@ -1,18 +1,35 @@
-*.iml
-.gradle
-.kotlin
-/local.properties
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
-.DS_Store
-/build
-/captures
-.externalNativeBuild
-.cxx
+# Gradle files
+.gradle/
+build/
+*/build/
+*/build/
+
+# Local configuration
 local.properties
 .env
-debug.keystore
+
+# IDE files
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Keystore files
+*.jks
+*.keystore
+
+# Temporary files
+*.tmp
+*.log
+
+# CI temporary files
+.ci-logs/
+.logs-tmp/
+.ci-diagnose.ps1
+.ci-monitor.ps1
+.get-logs.ps1
