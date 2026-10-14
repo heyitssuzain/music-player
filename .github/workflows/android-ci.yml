@@ -43,7 +43,7 @@ jobs:
           # Accept licenses
           yes | sdkmanager --licenses --sdk_root=$ANDROID_HOME
           # Install required packages
-          sdkmanager "platform-tools" "platforms;android-36" "build-tools;36.0.0" "ndk;27.2.12479018" "cmake;3.22.1" --sdk_root=$ANDROID_HOME
+          sdkmanager "platform-tools" "platforms;android-36" "build-tools;36.0.0" --sdk_root=$ANDROID_HOME
           echo "ANDROID_HOME=$ANDROID_HOME" >> $GITHUB_ENV
           echo "$ANDROID_HOME/cmdline-tools/latest/bin" >> $GITHUB_PATH
 
