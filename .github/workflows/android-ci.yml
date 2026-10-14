@@ -59,27 +59,27 @@ jobs:
           gradle-version: '8.10.2'
 
       - name: Build Debug APK
-        run: |
-          gradle assembleDebug --no-daemon --stacktrace --info 2>&1 | tee build.log
-        continue-on-error: true
+        run: gradle assembleDebug --no-daemon --stacktrace --info
 
-      - name: Upload Build Log
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-log
-          path: build.log
-          retention-days: 7
+      - name: Find APK
+        run: |
+          echo "Searching for APK files..."
+          find . -name "*.apk" -type f 2>/dev/null | head -20
+          echo "---"
+          ls -la app/build/outputs/ 2>/dev/null || echo "app/build/outputs not found"
+          echo "---"
+          ls -la app/build/outputs/apk/ 2>/dev/null || echo "app/build/outputs/apk not found"
+          echo "---"
+          ls -la app/build/outputs/apk/debug/ 2>/dev/null || echo "app/build/outputs/apk/debug not found"
 
       - name: Verify APK
         run: |
-          APK_PATH="app/build/outputs/apk/debug/app-debug.apk"
-          if [ ! -f "$APK_PATH" ]; then
-            echo "ERROR: APK not found at $APK_PATH"
-            find app/build/outputs -name "*.apk" -type f 2>/dev/null || echo "No APK files found anywhere"
+          APK_PATH=$(find . -name "*.apk" -type f 2>/dev/null | head -1)
+          if [ -z "$APK_PATH" ]; then
+            echo "ERROR: No APK found anywhere"
             exit 1
           fi
-          echo "APK found: $APK_PATH"
+          echo "APK found at: $APK_PATH"
           ls -lh "$APK_PATH"
           unzip -l "$APK_PATH" | head -20
           if command -v aapt &> /dev/null; then
@@ -88,11 +88,12 @@ jobs:
             apkanalyzer manifest application-id "$APK_PATH"
           fi
           sha256sum "$APK_PATH"
+          echo "APK_PATH=$APK_PATH" >> $GITHUB_ENV
 
       - name: Upload Debug APK
         uses: actions/upload-artifact@v4
         with:
           name: AURA-debug-apk
-          path: app/build/outputs/apk/debug/app-debug.apk
+          path: ${{ env.APK_PATH }}
           retention-days: 30
           if-no-files-found: error
