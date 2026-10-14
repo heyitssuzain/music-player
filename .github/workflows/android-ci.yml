@@ -21,24 +21,18 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Set up JDK 17
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Install Android SDK & Accept Licenses
-        run: |
-          sudo mkdir -p /usr/local/lib/android/sdk
-          cd /usr/local/lib/android/sdk
-          wget -q https://dl.google.com/android/repository/commandlinetools-linux-11006682_latest.zip -O cmdline-tools.zip
-          unzip -q cmdline-tools.zip -d cmdline-tools
-          rm cmdline-tools.zip
-          export ANDROID_HOME=/usr/local/lib/android/sdk
-          export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$PATH
-          yes | sdkmanager --licenses
-          sdkmanager "platform-tools" "platforms;android-36" "build-tools;36.0.0" --sdk_root=$ANDROID_HOME
-          echo "ANDROID_HOME=$ANDROID_HOME" >> $GITHUB_ENV
-          echo "ANDROID_HOME/cmdline-tools/latest/bin" >> $GITHUB_PATH
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          api-level: 36
+          ndk-version: r27c
+          build-tools: 36.0.0
+          cmake-version: 3.22.1
 
       - name: Generate Debug Keystore
         run: |
@@ -50,6 +44,9 @@ jobs:
         with:
           gradle-version: '9.8.0'
 
+      - name: Run Unit Tests
+        run: ./gradlew testDebugUnitTest --no-daemon --stacktrace
+
       - name: Build Debug APK
         run: ./gradlew assembleDebug --no-daemon --stacktrace
 
@@ -57,10 +54,18 @@ jobs:
         run: |
           APK_PATH="app/build/outputs/apk/debug/app-debug.apk"
           if [ ! -f "$APK_PATH" ]; then
-            echo "ERROR: APK not found"
+            echo "ERROR: APK not found at $APK_PATH"
+            find app/build/outputs -name "*.apk" -type f 2>/dev/null || echo "No APK files found anywhere"
             exit 1
           fi
-          echo "APK size: $(stat -c%s "$APK_PATH") bytes"
+          echo "APK found: $APK_PATH"
+          ls -lh "$APK_PATH"
+          unzip -l "$APK_PATH" | head -20
+          if command -v aapt &> /dev/null; then
+            aapt dump badging "$APK_PATH" | grep package
+          elif command -v apkanalyzer &> /dev/null; then
+            apkanalyzer manifest application-id "$APK_PATH"
+          fi
           sha256sum "$APK_PATH"
 
       - name: Upload Debug APK
