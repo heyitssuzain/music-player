@@ -45,6 +45,7 @@ jobs:
         run: |
           keytool -genkeypair -alias androiddebugkey -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US" -keystore debug.keystore -storepass android -keypass android -storetype jks
           echo "Debug keystore generated successfully"
+          ls -la debug.keystore
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
@@ -52,7 +53,7 @@ jobs:
           gradle-version: '9.8.0'
 
       - name: Build Debug APK
-        run: ./gradlew assembleDebug --no-daemon --stacktrace
+        run: ./gradlew assembleDebug --no-daemon --stacktrace --info
 
       - name: Verify APK
         run: |
