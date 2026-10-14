@@ -30,10 +30,13 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
         with:
-          api-level: 36
-          ndk-version: r27c
-          build-tools: 36.0.0
-          cmake-version: 3.22.1
+          packages: |
+            platform-tools
+            platforms;android-36
+            build-tools;36.0.0
+            ndk;27.2.12479018
+            cmake;3.22.1
+          accept-android-sdk-licenses: true
 
       - name: Generate Debug Keystore
         run: |
