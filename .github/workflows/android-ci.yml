@@ -29,23 +29,35 @@ jobs:
       - name: Setup Android SDK
         run: |
           set -euo pipefail
-          # Install Android SDK using command line tools (most reliable method)
+          # Install Android SDK using command line tools
           export ANDROID_HOME=$HOME/android-sdk
           export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH
           
-          # Download and install command line tools
+          # Download and install command line tools (using known working version)
           sudo mkdir -p $ANDROID_HOME
           cd $ANDROID_HOME
-          wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O cmdline-tools.zip
+          echo "Downloading Android command line tools..."
+          wget -q --show-progress https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O cmdline-tools.zip || \
+          wget -q --show-progress https://dl.google.com/android/repository/commandlinetools-linux-13114758_latest.zip -O cmdline-tools.zip || \
+          wget -q --show-progress https://dl.google.com/android/repository/commandlinetools-linux-10406996_latest.zip -O cmdline-tools.zip
+          
+          echo "Extracting command line tools..."
           unzip -q cmdline-tools.zip -d cmdline-tools
           rm cmdline-tools.zip
           mkdir -p cmdline-tools/latest
           mv cmdline-tools/bin cmdline-tools/lib cmdline-tools/latest/ 2>/dev/null || true
           
-          # Accept licenses
+          # Verify sdkmanager exists
+          if [ ! -f "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" ]; then
+            echo "ERROR: sdkmanager not found!"
+            find $ANDROID_HOME -name "sdkmanager" -type f
+            exit 1
+          fi
+          
+          echo "Accepting licenses..."
           yes | sdkmanager --licenses --sdk_root=$ANDROID_HOME
           
-          # Install required packages
+          echo "Installing required packages..."
           sdkmanager "platform-tools" "platforms;android-36" "build-tools;36.0.0" --sdk_root=$ANDROID_HOME
           
           # Set environment variables for subsequent steps
