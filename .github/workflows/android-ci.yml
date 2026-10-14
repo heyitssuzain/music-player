@@ -26,12 +26,19 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-        with:
-          api-level: 35
-          build-tools: 35.0.0
-          cmake-version: 3.22.1
+      - name: Install Android SDK & Accept Licenses
+        run: |
+          sudo mkdir -p /usr/local/lib/android/sdk
+          cd /usr/local/lib/android/sdk
+          wget -q https://dl.google.com/android/repository/commandlinetools-linux-11006682_latest.zip -O cmdline-tools.zip
+          unzip -q cmdline-tools.zip -d cmdline-tools
+          rm cmdline-tools.zip
+          export ANDROID_HOME=/usr/local/lib/android/sdk
+          export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$PATH
+          echo "y" | sdkmanager --licenses
+          sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0" --sdk_root=$ANDROID_HOME
+          echo "ANDROID_HOME=$ANDROID_HOME" >> $GITHUB_ENV
+          echo "ANDROID_HOME/cmdline-tools/latest/bin" >> $GITHUB_PATH
 
       - name: Generate Debug Keystore
         run: |
@@ -53,6 +60,7 @@ jobs:
             echo "ERROR: APK not found"
             exit 1
           fi
+          echo "APK size: $(stat -c%s "$APK_PATH") bytes"
           sha256sum "$APK_PATH"
 
       - name: Upload Debug APK
