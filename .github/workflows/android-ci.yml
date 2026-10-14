@@ -61,17 +61,7 @@ jobs:
           gradle-version: '8.10.2'
 
       - name: Build Debug APK
-        run: |
-          gradle assembleDebug --stacktrace --info 2>&1 | tee build.log
-        continue-on-error: true
-
-      - name: Upload Build Log
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-log
-          path: build.log
-          retention-days: 7
+        run: gradle assembleDebug --stacktrace --info
 
       - name: Find and Verify APK
         run: |
@@ -83,7 +73,7 @@ jobs:
           fi
           echo "APK found at: $APK_PATH"
           ls -lh "$APK_PATH"
-          echo "APK_PATH=$APK_PATH" >> $GITHUB_ENV
+          echo "APK_PATH=$APK_PATH" >> "$GITHUB_ENV"
 
       - name: Upload Debug APK
         uses: actions/upload-artifact@v4
