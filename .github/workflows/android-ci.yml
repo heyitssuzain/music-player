@@ -25,7 +25,6 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '17'
-          cache: gradle
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
@@ -52,6 +51,27 @@ jobs:
       - name: Build Debug APK
         run: gradle assembleDebug --no-daemon --stacktrace
 
+      - name: Verify APK
+        run: |
+          APK_PATH="app/build/outputs/apk/debug/app-debug.apk"
+          if [ ! -f "$APK_PATH" ]; then
+            echo "ERROR: APK not found at $APK_PATH"
+            find app/build/outputs -name "*.apk" -type f 2>/dev/null || echo "No APK files found anywhere"
+            exit 1
+          fi
+          echo "APK found: $APK_PATH"
+          ls -lh "$APK_PATH"
+          # Verify APK structure
+          unzip -l "$APK_PATH" | head -20
+          # Verify package ID
+          if command -v aapt &> /dev/null; then
+            aapt dump badging "$APK_PATH" | grep package
+          elif command -v apkanalyzer &> /dev/null; then
+            apkanalyzer manifest application-id "$APK_PATH"
+          fi
+          # SHA256
+          sha256sum "$APK_PATH"
+
       - name: Fix APK Permissions
         run: |
           chmod 644 app/build/outputs/apk/debug/app-debug.apk || true
@@ -63,3 +83,4 @@ jobs:
           name: AURA-debug-apk
           path: app/build/outputs/apk/debug/app-debug.apk
           retention-days: 30
+          if-no-files-found: error
